@@ -91,7 +91,6 @@ function onYouTubeIframeAPIReady() {
 fetch(videoUrl)
   .then((response) => response.json())
   .then((data) => {
-   
     const videoData = data.items[0];
 
     const title = videoData.snippet.channelTitle;
@@ -117,7 +116,9 @@ fetch(videoUrl)
     document.querySelector(".title2").innerText = title;
     document.querySelector(".likeBtn p").innerText = `${viewCount} views`;
     document.querySelector(".flex p:nth-child(1)").innerText = `${likeCount}`;
-    document.querySelector(".flex p:nth-child(2)" ).innerText = `${dislikeCount}`;
+    document.querySelector(
+      ".flex p:nth-child(2)"
+    ).innerText = `${dislikeCount}`;
     document.querySelector(".name").innerText = channelTitle;
     document.querySelector(
       ".channel-name p:nth-child(2)"
@@ -129,24 +130,26 @@ fetch(videoUrl)
   })
   .catch((error) => console.error("Error:", error));
 
-
-  
-  const sideVideoContainer = document.querySelector('.right-sidebar');
+const sideVideoContainer = document.querySelector(".right-sidebar");
 
 // Fetch related videos or more videos
-fetch(video_http + new URLSearchParams({
-    key: api_Key,
-    part: 'snippet',
-    chart: 'mostPopular',
-    maxResults: 20,
-    regionCode: 'IN',
-})).then(res => res.json())
-    .then(data => {
-        data.items.forEach(item => {
-            const title = item.snippet.title;
-            const channelTitle = item.snippet.channelTitle;
-            const thumbnail = item.snippet.thumbnails.default.url;
-            sideVideoContainer.innerHTML += `
+fetch(
+  video_http +
+    new URLSearchParams({
+      key: api_Key,
+      part: "snippet",
+      chart: "mostPopular",
+      maxResults: 20,
+      regionCode: "IN",
+    })
+)
+  .then((res) => res.json())
+  .then((data) => {
+    data.items.forEach((item) => {
+      const title = item.snippet.title;
+      const channelTitle = item.snippet.channelTitle;
+      const thumbnail = item.snippet.thumbnails.default.url;
+      sideVideoContainer.innerHTML += `
                 <div class="side_video_list">
                     <a href="" class="small-thumbnail"><img src="${thumbnail}" alt=""></a>
                     <div class="vid-info">
@@ -155,6 +158,70 @@ fetch(video_http + new URLSearchParams({
                     </div>
                 </div>
             `;
-        });
-    })
-    .catch(err => console.error(err));
+    });
+  })
+  .catch((err) => console.error(err));
+
+// Fetch video comments
+const commentsUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=AIzaSyCgpUKcX_vlG3P7SgI4MxsAQH5LWHFYuiU`;
+
+fetch(commentsUrl)
+  .then((response) => response.json())
+  .then((data) => {
+    const comments = data.items;
+    const publicCommentsContainer = document.querySelector(".public-comments");
+
+    comments.forEach((comment) => {
+      const commentText = comment.snippet.topLevelComment.snippet.textDisplay;
+      const commentAuthor =
+        comment.snippet.topLevelComment.snippet.authorDisplayName;
+      const profileImageUrl =
+        comment.snippet.topLevelComment.snippet.authorProfileImageUrl;
+
+      // Create comment elements
+      const commentElement = document.createElement("div");
+      commentElement.classList.add("comment");
+      commentElement.innerHTML = `
+      <img src="${profileImageUrl}" class="profile-image">
+        <p class="author">${commentAuthor}</p>
+        <p class="text">${commentText}</p>
+      `;
+      publicCommentsContainer.appendChild(commentElement);
+    });
+  })
+  .catch((error) => console.error("Error:", error));
+
+let description =
+  "Chris Fisher, also known as the Blind Woodturner, learned his craft by listening to hundreds of hours of YouTube videos and experimenting in his workshop. Now he’s a YouTube creator himself, sells his products worldwide, and does demonstrations all around the country.";
+const MAX_DESCRIPTION_LENGTH = 200; // Customize the maximum length
+
+const showMoreLink = document.getElementById("showMoreLink");
+const descriptionText = document.getElementById("descriptionText");
+
+if (description.length > MAX_DESCRIPTION_LENGTH) {
+  descriptionText.innerText = `${description.slice(
+    0,
+    MAX_DESCRIPTION_LENGTH
+  )}...`;
+} else {
+  showMoreLink.style.display = "none";
+}
+
+let isExpanded = false;
+
+function showMore(event) {
+  event.preventDefault();
+  isExpanded = !isExpanded;
+  if (isExpanded) {
+    showMoreLink.innerText = "Show more";
+    descriptionText.innerText = description;
+  } else {
+    showMoreLink.innerText = "Show less";
+    descriptionText.innerText = `${description.slice(
+      0,
+      MAX_DESCRIPTION_LENGTH
+    )}...`;
+  }
+}
+
+showMoreLink.addEventListener("click", showMore);
